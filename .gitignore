@@ -1,0 +1,12 @@
+# Ignorar diretórios ocultos do Terraform
+.terraform/
+
+# Ignorar arquivos de estado (O Cérebro do Terraform)
+*.tfstate
+*.tfstate.backup
+
+# Ignorar arquivos de variáveis com dados sensíveis (se você usar no futuro)
+*.tfvars
+
+# Ignorar arquivos de chaves (caso você crie alguma localmente)
+*.pem

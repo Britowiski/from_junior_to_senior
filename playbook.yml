@@ -1,0 +1,42 @@
+- name: Configurar Servidor Web com Apache e Docker
+  hosts: servidores_web
+  become: yes
+
+  tasks:
+    - name: Atualizar o apt e instalar o Docker
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+        update_cache: yes
+
+    - name: Criar a pasta do nosso aplicativo
+      file:
+        path: /home/ubuntu/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Garantir que o serviço Docker esteja em execução
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Criar o arquivo docker-compose.yml
+      copy:
+        dest: /home/ubuntu/app/docker-compose.yml
+        content: |
+          version: '3.8'
+          services:
+            meu-site:
+              image: httpd:latest
+              ports:
+                - "80:80"
+              restart: always
+
+    - name: Subir o container com Docker Compose
+      command: docker-compose up -d
+      args:
+        chdir: /home/ubuntu/app
