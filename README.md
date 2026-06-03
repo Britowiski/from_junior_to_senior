@@ -34,3 +34,69 @@ The AWS infrastructure provisioned includes an isolated network, internet routin
 +-----------------------------+
         | 4. Web Traffic (Port 80)
 [ USER'S BROWSER ] -> "It works!"
+
+📂 Directory Structure
+providers.tf: Defines the AWS provider and required Terraform version.
+
+variables.tf: Centralizes variables (e.g., default region us-east-1).
+
+data.tf: Dynamically fetches the latest Ubuntu AMI from AWS.
+
+main.tf: Provisions the networking layer (VPC, IGW, Subnet, Route Table), Security Groups, and the EC2 instance with the injected SSH key.
+
+outputs.tf: Outputs the public IP of the provisioned server to the console.
+
+playbook.yml: The Ansible playbook that installs dependencies and runs the Docker container.
+
+hosts.ini: The Ansible inventory file defining the target hosts.
+
+.gitignore: Protects sensitive files (.tfstate, .terraform/) from being pushed to the repository.
+
+🛠️ Tech Stack
+Terraform: Declarative infrastructure provisioning.
+
+Ansible: Idempotent configuration management via SSH.
+
+AWS: Cloud provider (EC2, VPC, Security Groups).
+
+Docker & Docker Compose: Application containerization.
+
+Apache HTTP Server: Web server hosting the test page.
+
+🚀 How to Run this Project
+1. Prerequisites
+Terraform installed on your local machine.
+
+Ansible installed.
+
+AWS CLI configured with your credentials (aws configure).
+
+An SSH key pair generated locally at ~/.ssh/chave_ansible.
+
+2. Provisioning the Infrastructure (Terraform)
+Initialize the directory, review the execution plan, and apply it:
+
+Bash
+terraform init
+terraform plan
+terraform apply
+Make sure to copy the Public IP address displayed in the outputs at the end.
+
+3. Configuring the Server (Ansible)
+Update the hosts.ini file with the copied IP address. Then, run the Playbook to configure the server:
+
+Bash
+ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i hosts.ini playbook.yml
+4. Testing the Application
+Open your web browser and access the server's IP address on port 80:
+
+Plaintext
+http://<YOUR_PUBLIC_IP>
+You should see the default Apache "It works!" page.
+
+🧹 Tear Down
+To avoid unexpected charges on your AWS account, make sure to destroy the resources after testing:
+
+Bash
+terraform destroy
+(Confirm by typing yes when prompted)
