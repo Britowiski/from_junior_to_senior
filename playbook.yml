@@ -24,7 +24,26 @@
         state: started
         enabled: yes
 
-    - name: Criar o arquivo docker-compose.yml
+    - name: Criar a pasta de configuração do Prometheus
+      file:
+        path: /home/ubuntu/app/prometheus
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Criar o arquivo prometheus.yml
+      copy:
+        dest: /home/ubuntu/app/prometheus/prometheus.yml
+        content: |
+          global:
+            scrape_interval: 15s
+
+          scrape_configs:
+          - job_name: "apache"
+            static_configs:
+              - targets: ["node-exporter:9100"]
+
+    - name: Criar o arquivo docker-compose.yml atualizado
       copy:
         dest: /home/ubuntu/app/docker-compose.yml
         content: |
@@ -35,8 +54,20 @@
               ports:
                 - "80:80"
               restart: always
+            node-exporter:
+              image: prom/node-exporter:latest
+            prometheus:
+              image: prom/prometheus:latest
+              volumes:
+                - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+              restart: always
+            grafana:
+              image: grafana/grafana:latest
+              ports:
+                - "3000:3000"
+              restart: always
 
-    - name: Subir o container com Docker Compose
+    - name: suubir a stack inteira com Docker Compose
       command: docker-compose up -d
       args:
         chdir: /home/ubuntu/app
