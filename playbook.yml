@@ -1,73 +1,25 @@
-- name: Configurar Servidor Web com Apache e Docker
+- name: Configurar Cluster Kubernetes com K3s
   hosts: servidores_web
   become: yes
 
   tasks:
-    - name: Atualizar o apt e instalar o Docker
+    - name: Atualizar os pacotes do sistema
       apt:
-        name:
-          - docker.io
-          - docker-compose
-        state: present
         update_cache: yes
+        upgrade: dist
 
-    - name: Criar a pasta do nosso aplicativo
-      file:
-        path: /home/ubuntu/app
-        state: directory
-        owner: ubuntu
-        group: ubuntu
+    - name: Baixar e instalar o K3s (Kubernetes)
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
 
-    - name: Garantir que o serviço Docker esteja em execução
+    - name: Garantir que o servico K3s esta rodando
       systemd:
-        name: docker
+        name: k3s
         state: started
         enabled: yes
 
-    - name: Criar a pasta de configuração do Prometheus
+    - name: Dar permissao no arquivo de configuracao do cluster para o usuario ubuntu
       file:
-        path: /home/ubuntu/app/prometheus
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-
-    - name: Criar o arquivo prometheus.yml
-      copy:
-        dest: /home/ubuntu/app/prometheus/prometheus.yml
-        content: |
-          global:
-            scrape_interval: 15s
-
-          scrape_configs:
-          - job_name: "apache"
-            static_configs:
-              - targets: ["node-exporter:9100"]
-
-    - name: Criar o arquivo docker-compose.yml atualizado
-      copy:
-        dest: /home/ubuntu/app/docker-compose.yml
-        content: |
-          version: '3.8'
-          services:
-            meu-site:
-              image: httpd:latest
-              ports:
-                - "80:80"
-              restart: always
-            node-exporter:
-              image: prom/node-exporter:latest
-            prometheus:
-              image: prom/prometheus:latest
-              volumes:
-                - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-              restart: always
-            grafana:
-              image: grafana/grafana:latest
-              ports:
-                - "3000:3000"
-              restart: always
-
-    - name: suubir a stack inteira com Docker Compose
-      command: docker-compose up -d
-      args:
-        chdir: /home/ubuntu/app
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: "0644"
